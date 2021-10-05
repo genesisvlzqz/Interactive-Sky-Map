@@ -1,139 +1,103 @@
-<!DOCTYPE html>
-<meta charset="utf-8">
-
-<!-- Load d3.js -->
-<script src="https://d3js.org/d3.v4.js"></script>
-
-<!-- Load color scale -->
-<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-
-<!-- Create a div where the graph will take place -->
-<div id="my_dataviz"></div>
-
-<!-- A bit of CSS: change stroke color of circle on hover (white -> black) -->
-<style>
-.bubbles {
-  stroke-width: 2px;
-  stroke: white;
-}
-.bubbles:hover {
-  stroke: black;
-}
-</style>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 
-<script>
+<head>
 
-// set the dimensions and margins of the graph
-var margin = {top: 10, right: 20, bottom: 30, left: 50},
-    width = 700 - margin.left - margin.right,
-    height = 520 - margin.top - margin.bottom;
-
-// append the svg object to the body of the page
-var svg = d3.select("#my_dataviz")
-  .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
-    
-
-//Read the data
-d3.json("https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&select=dec,ra,pl_hostname,pl_pnum&format=json", function(data) {
-
-  // Add X axis
-  var x = d3.scaleLinear()
-    .domain([0, 24])
-    .range([ 0, width]);
-  svg.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
-
-  // Add Y axis
-  var y = d3.scaleLinear()
-    .domain([-90, 90])
-    .range([ height, 0]);
-  svg.append("g")
-    .call(d3.axisLeft(y));
-
-  // Add a scale for bubble size
-  var z = d3.scaleLinear()
-    .domain([200000, 1310000000])
-    .range([ 4, 40]);
+  <title>Interactive SkyMap</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="shortcut icon" href="images/favicon.ico" />
+  <!-- Import css sheet -->
+  <style type="text/css"> @import url(style.css); </style>
+  <style type="text/css">@import url(style.css);</style>
 
 
-  // var myimage = svg.append('image')
-  //   .attr('xlink:href', 'https://www.evernote.com/shard/s25/sh/0a6c1268-9fe0-4687-ac30-164ed59c30ee/33fab35197b3b7e98c217ef7f5b05ae7/res/81a02713-357f-cb01-3953-9d2d0474ac12')
-  //   .attr('width', width + margin.left + margin.right)
-  //   .attr('height', height + margin.top + margin.bottom)
 
-  // -1- Create a tooltip div that is hidden by default:
-  var tooltip = d3.select("#my_dataviz")
-    .append("div")
-      .style("opacity", 0)
-      .attr("class", "tooltip")
-      .style("background-color", "black")
-      .style("border-radius", "5px")
-      .style("padding", "10px")
-      .style("color", "white")
+  <!-- Load d3.js -->
+  <script src = "https://d3js.org/d3.v4.min.js"> </script>
 
-  // -2- Create 3 functions to show / update (when mouse move but stay on same circle) / hide the tooltip
-  var showTooltip = function(d) {
-    tooltip
-      .transition()
-      .duration(200)
-    tooltip
-      .style("opacity", 1)
-      .html("Name: " + d.pl_hostname + ", " + "Number of Planets: " + d.pl_pnum)
-      .style("left", (d3.mouse(this)[0]+30) + "px")
-      .style("top", (d3.mouse(this)[1]+30) + "px")
+
+  <!-- Load color scale -->
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+
+  <!-- A bit of CSS: change stroke color of circle on hover (white -> black) -->
+  <style>
+    .bubbles {
+      stroke-width: 2px;
+      stroke: white;
+    }
+    .bubbles:hover {
+      stroke: black;
+    }
+    div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 60px;					
+    height: fit-content;					
+    padding: 2px;				
+    font: 12px sans-serif;
+    color: white;
+    background: rgb(0, 0, 0);	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
   }
-  var moveTooltip = function(d) {
-    tooltip
-      .style("left", (d3.mouse(this)[0]+30) + "px")
-      .style("top", (d3.mouse(this)[1]+30) + "px")
-  }
-  var hideTooltip = function(d) {
-    tooltip
-      .transition()
-      .duration(200)
-      .style("opacity", 0)
-  }
-
-  svg.append("text")
-    .attr("class", "x label")
-    .attr("text-anchor", "end")
-    .attr("x", width)
-    .attr("y", height - 6)
-    .text("Right Ascencion");
+  </style>
+</head>
+<div id="header-container">
+  <div id="header">
+    <h1><a href="home">Interactive<span>Skymap</span></a></h1>
+    <p id="slogan">Pre-loaded with https://exoplanetarchive.ipac.caltech.edu/</p>
+  </div>
+</div>
 
 
-    svg.append("text")
-    .attr("class", "y label")
-    .attr("text-anchor", "end")
-    .attr("y", 6)
-    .attr("dy", ".75em")
-    .attr("transform", "rotate(-90)")
-    .text("Declination (degrees)");
+<body>
+  <div id="content">
+    <h2>About this project</h2>
+    <p>
+      The purpose of this project is to establish a web-app that is constantly up to date with confirmed planets data from the NASA Exoplanet Archives using the API.
+      We are plotting stellar systems Declination vs Right Ascension using D3
+    </p>
+    <br>
+    <br>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="/update.php"></script>
+
+    <h2>Sample Graph</h2>
+    <!--Button to activate habitability filter-->
+    <table>
+      <tr>
+        <td><button id="hab">Habitability Candidates</button></td>
+        <!-- Form to deploy update script-->
+        <td><form action="/update.php" method="get">
+          <input type="submit" value="Update Data">
+        </form></td>
+      </tr>
+      <tr>
+        <td><p>Hab. Coming soon, not yet enabled. </p></td>
+      </tr>
+    </table>
+    <!--Div where graph will take place-->
+    <div id="my_dataviz"><p>Click and Drag on the Map to move around. Scroll to zoom in or out. Hover over the data points to view Name and planets in the system. Click the data point to view the Exoplanet Archive page for a system.</p></div>
+    <script src="star.js"></script>
+    <script src="plot.js"></script> 
+
+    <!-- Short text regarding graph -->
+    <div class="post-bottom"> This is an interactive skymap</div>
 
 
-  // Add dots
-  svg.append('g')
-    .selectAll("dot")
-    .data(data)
-    .enter()
-    .append("circle")
-      .attr("class", "bubbles")
-      .attr("cx", function (d) { return x(d.ra) * (24/360); } )
-      .attr("cy", function (d) { return y(d.dec); } )
-      .attr("r", 5 )
-      .style("fill", "yellow")
-      .style("opacity", 0.4)
-    // -3- Trigger the functions
-    .on("mouseover", showTooltip )
-    .on("mousemove", moveTooltip )
-    .on("mouseleave", hideTooltip )
+  <div class="clear"></div>
+</div>
+<div id="footer">
+  <p id="copyright">&copy; 2021 Genesis Velazquez <a target="_blank" href="http://validator.w3.org/check?uri=referer">XHTML</a> | <a target="_blank" href="http://jigsaw.w3.org/css-validator/check/referer">CSS</a></p>
+  <p id="design">Site Design by <a href="http://www.galengrover.com">Galen Grover</a></p>
+  <div class="clear"></div>
+</div>
 
-  })
-</script>
+  <!-- Load script file -->
+
+</body>
+</html>
