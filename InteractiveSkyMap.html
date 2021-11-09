@@ -60,33 +60,43 @@
       The purpose of this project is to establish a web-app that is constantly up to date with confirmed planets data from the NASA Exoplanet Archives using the API.
       We are plotting stellar systems Declination vs Right Ascension using D3
     </p>
+    <p>
+      Click and Drag on the Map to move around. Scroll to zoom in or out. 
+      Hover over the data points to view Name and planets in the system. 
+      Click the data point to view the Exoplanet Archive page for a system.
+    </p>
     <br>
     <br>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="/update.php"></script>
 
     <h2>Sample Graph</h2>
     <!--Button to activate habitability filter-->
     <table>
       <tr>
-        <td><button id="hab">Habitability Candidates</button></td>
-        <!-- Form to deploy update script-->
-        <td><form action="/update.php" method="get">
-          <input type="submit" value="Update Data">
-        </form></td>
-      </tr>
-      <tr>
-        <td><p>Hab. Coming soon, not yet enabled. </p></td>
+        <td>
+          <div class="inline-field" >
+            <input type="checkbox" id="hab" value="hab" unchecked>
+            <label for="hab">Habitability Candidates</label>
+
+          </div>
+        </td>
+        <td>      
+          <form action="update.php" method="get">
+            <input type="submit" value="Update Data">
+          </form>
+        </td>
+        <td>
+          <button id="Reset"type="button">Reset zoom</button> 
+        </td>
       </tr>
     </table>
     <!--Div where graph will take place-->
-    <div id="my_dataviz"><p>Click and Drag on the Map to move around. Scroll to zoom in or out. Hover over the data points to view Name and planets in the system. Click the data point to view the Exoplanet Archive page for a system.</p></div>
+    <div id="my_dataviz"></div>
     <script src="star.js"></script>
     <script src="plot.js"></script> 
 
-    <!-- Short text regarding graph -->
-    <div class="post-bottom"> This is an interactive skymap</div>
+    <!-- Form to deploy update script-->
 
 
   <div class="clear"></div>

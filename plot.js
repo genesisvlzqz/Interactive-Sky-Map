@@ -1,16 +1,14 @@
-//April 13 log:
-//Added picture background of map
-//Added click function to each star
-//Fixed inverted scale for x and y.
-//Added color change on circle depending on star type
-//Added zoom functionality
-//Added legend
-//Implementd Star and Planet Classes
-//To do - Habitability Filter, zoom cap, print preview
+//November 9 Log:
+//Removed planet class
+//added planets vector to star class
+//renamed stars array to catalogue
+//renamed habitable array to habcatalogue
+//added zoom reset
+//current candidates: 21
 //--------------------------------------------------------------
 //Request"
 var request = new XMLHttpRequest();
-request.open("GET", "planet_data.txt", false);
+request.open("GET", "http://interactiveskymap.com/i_skymap/planet_data.txt", false);
 request.send(null)
   
 //Parse the planet data
@@ -20,14 +18,20 @@ var data = JSON.parse(request.responseText);
 var margin = {top: 10, right: 30, bottom: 50, left: 50},
 width = 780 - margin.left - margin.right,
 height = 485.4 - margin.top - margin.bottom;
+
+//Zoom properties
+
+function zoomed(){
+  svg.attr("transform",d3.event.transform)
+}
+var zoom = d3.zoom().on("zoom",zoomed);
+
 // append the svg object to the body of the page and enable zoom 
 var svg = d3.select("#my_dataviz")
   .append("svg")
   .attr("width", width + margin.left + margin.right)
   .attr("height", height + margin.top + margin.bottom)
-  .call(d3.zoom().on("zoom", function () {
-  svg.attr("transform", d3.event.transform)
-  }))
+  .call(zoom)
   .append("g")
   .attr("transform",
   "translate(" + margin.left + "," + margin.top + ")");
@@ -38,77 +42,23 @@ var mapimage = svg.append("image")
   .attr("width", width)
   .attr("height", height);
 
-// Declare arrays to store star objects and planet objects
-let _stars = []; //empty stars array
-let _planets = []; //empty planets array
-let entry = {}; //empty object
-let duplicate = false; //duplicates flag
+// Declare arrays to store star objects and habitable candidates
+var catalogue = [];
+var habCatalogue = [];
 
-// Loop for the array elements 
-for (let i in data) { 
-  
-  //Creating object from class stars for every star in map.
-  if(i<1) {
-    entry = new star(data[i]['hostname'],data[i]['ra'],data[i]['dec'],data[i]['st_teff'],data[i]['sy_pnum'],data[i]['st_rad'],data[i]['sy_vmag'],data[i]['sy_dist']);
-    _stars.push(entry);
-  } else {
-    for (let j in _stars) { //Loop through stars array looking for dupes
-      if (_stars[j].getName() == data[i]['hostname']) {
-        duplicate = true;
-      } else {
-        duplicate = false;
-      }
-    }  
-    if (duplicate == false) {
-      _stars.push(new star(data[i]['hostname'],data[i]['ra'],data[i]['dec'],data[i]['st_teff'],data[i]['sy_pnum'],data[i]['st_rad'],data[i]['sy_vmag'],data[i]['sy_dist']));  
-    }
-  }
-} 
-
-for (let i in data) { 
-  //Creating object from class planets for every planet in map.
-  //Duplicate validation
-  if (i<1) {
-    entry = new planet(data[i]['pl_name'],data[i]['ra'],data[i]['dec'],data[i]['pl_orbsmax'],data[i]['hostname']);
-    _planets.push(entry);
-  } else {
-    for (let j in _planets) {
-        if (_planets[j].getName() == data[i]['pl_name']) {
-          duplicate = true;
-        } else {
-          duplicate = false;
-      }
-    }  
-    if (duplicate == false){
-
-      entry = new planet(data[i]['pl_name'],data[i]['ra'],data[i]['dec'],data[i]['pl_orbsmax'],data[i]['hostname']);
-      _planets.push(entry);
-    }
+//Creating object from class stars for every star in map.
+for (let i in data){
+  item = new star(data[i]['hostname'],data[i]['ra'],data[i]['dec'],data[i]['st_teff'],data[i]['sy_pnum'],data[i]['st_rad'],data[i]['sy_vmag'],data[i]['sy_dist']);
+  item.setPlanets(data[i]['pl_name'],data[i]['pl_orbsmax'],data[i]['pl_rade'],data[i]['pl_bmasse']);
+  catalogue.push(item);
+}
+//checking Habitability flag and storing in habCatalogue if true
+for (let i  in catalogue){
+  item = catalogue[i].getPlanets()
+  if (item[0][4]==true){
+    habCatalogue.push(catalogue[i]);
   }
 }
-
-$("#hab").click(function()
-{
-
-
-});
-
-
-//check habitable planets
-//let k = 0;
-let habitable =[];
-for (let j in _stars) {
-  for (let i in _planets) {
-    if (_planets[i].getHost() == _stars[j].getName() && _planets[i].getPlDist() != null) {
-      if (_planets[i].getPlDist() <= _stars[j].getHabZoneMax() 
-        && _planets[i].getPlDist()>= _stars[j].getHabZoneMin()) {
-        habitable.push(_planets[i]);
-
-      }
-    }
-  }
-}
-console.log(habitable);
 
 // Add X axis Bottom
 var x = d3.scaleLinear()
@@ -181,54 +131,85 @@ svg.append("text")
 .text("Declination (°)");
 
 //-------------------------------------
-// Declare Legend Constants
-var offset = 30; //separation between labels
-var color = ["red", "orange","yellow","white","lightblue","blue","black"]; // Spectral type colors
-var type = ["M", "K", "G","F","A","B","O"] // Spectral Type Names
+function createLegend(){
+  // Declare Legend Constants
+  var offset = 30; //separation between labels
+  var color = ["red", "orange","yellow","white","lightblue","blue","black"]; // Spectral type colors
+  var type = ["M", "K", "G","F","A","B","O"] // Spectral Type Names
 
-// Add Legend
-for ( let i = 0; i < 7; i++) {
-  svg.append("circle")
-  .attr("cx",offset*i)
-  .attr("cy",height+30)
-  .attr("r", 4)
-  .style("stroke", "gray")
-  .style("stroke-width", 1)
-  .style("fill", color[i])
-  svg.append("text")
-  .attr("x", (offset*i+10))
-  .attr("y", height+35)
-  .text(type[i])
-  .style("font-size", "12px")
-  .attr("alignment-baseline","middle")
-} 
+  // Add Legend
+  for ( let i = 0; i < 7; i++) {
+    svg.append("circle")
+    .attr("cx",offset*i)
+    .attr("cy",height+30)
+    .attr("r", 4)
+    .style("stroke", "gray")
+    .style("stroke-width", 1)
+    .style("fill", color[i])
+    svg.append("text")
+    .attr("x", (offset*i+10))
+    .attr("y", height+35)
+    .text(type[i])
+    .style("font-size", "12px")
+    .attr("alignment-baseline","middle")
+  } 
+}
+
 //-------------------------------------
-// Add dots
-svg.append('g')
-.selectAll("dot")
-.data(_stars)
-.enter()
-.append("circle")
-.attr("class", "bubbles")
-.attr("cx", function (d) { return x(d.getRA()* (1/15)); } ) //1 hour RA = 15 Degrees RA
-.attr("cy", function (d) { return y(d.getDec()); } )
-.attr("r", 3)
-.style("stroke", "gray")
-.style("stroke-width", 1)
-.style("fill", setColor)
-.style("opacity", 1)
-  //Trigger hover, click, mouseout 
-  .on("click", viewsystem)
-  .on("mouseover", function(d) {		
-    div.transition()		
-        .duration(200)		
-        .style("opacity", .9);		
-    div.html(d.getName() + "<br/>"  + "# Planets: " + d.getPlNum())	
-        .style("left", (d3.event.pageX) + "px")		
-        .style("top", (d3.event.pageY - 28) + "px");	
-    })					
-.on("mouseout", function(d) {		
-    div.transition()		
-        .duration(500)		
-        .style("opacity", 0);	
-}) //end of add dots
+ function update(){
+  // For each check box:
+  d3.selectAll("#hab").each(function(d){
+    cb = d3.select(this);
+    grp = hab;
+    var datatouse
+    // If the box is checked, show only hab candidates
+    if(cb.property("checked")){
+      datatouse = habCatalogue;
+    }
+    else {
+      datatouse = catalogue;
+    }
+      svg.selectAll("circle").remove();
+      createLegend();
+      svg.append('g')
+      .selectAll("dot")
+      .data(datatouse)
+      .enter()
+      .append("circle")
+      .attr("class", "bubbles")
+      .attr("cx", function (d) { return x(d.getRA()* (1/15)); } ) //1 hour RA = 15 Degrees RA
+      .attr("cy", function (d) { return y(d.getDec()); } )
+      .attr("r", 3)
+      .style("stroke", "gray")
+      .style("stroke-width", 1)
+      .style("fill", setColor)
+      .style("opacity", 1)
+        //Trigger hover, click, mouseout 
+        .on("click", viewsystem)
+        .on("mouseover", function(d) {		
+          div.transition()		
+              .duration(200)		
+              .style("opacity", .9);		
+          div.html(d.getName() + "<br/>"  + "Planets: " + d.getPlNum())	
+              .style("left", (d3.event.pageX) + "px")		
+              .style("top", (d3.event.pageY - 28) + "px");	
+          })					
+      .on("mouseout", function(d) {		
+          div.transition()		
+              .duration(500)		
+              .style("opacity", 0);	
+      }) //end of add dots
+    }
+  )}
+
+//call update upon click
+d3.selectAll("#hab").on("change",update);
+$("#Reset").click(() => {
+  svg.transition()
+    .duration(750)
+    .call(zoom.transform, d3.zoomIdentity.scale(1))
+    .attr("transform",
+    "translate(" + margin.left + "," + margin.top + ")");
+  });
+//Initialize update function
+update();

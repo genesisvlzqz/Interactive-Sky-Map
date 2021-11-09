@@ -13,8 +13,8 @@ class star {
 		this.setApMag(st_optmag);
 		this.setDist(st_dist);
 		this.setSpecTypes(this.teff);
-		//this.setPlNames();
 		this.setHabZone();
+		this.planets = [];
 	}
 	// Setter
 	setName(name) {
@@ -81,18 +81,29 @@ class star {
     	}
 	}
 
-	setPlNames() {
-		planets =[];
-	}
-
 	setHabZone() {
 		if (this.BolCons!=null) {
-			var absmag = this.ApMag-5*Math.log(this.Dist/10);
+			
+			var absmag = this.ApMag-5*Math.log10(this.Dist/10);
 			var bolmag = absmag + this.BolCons;
 			var abslum = Math.pow(10,((bolmag - 4.75)/-2.5));
 			this.HabZoneMin = Math.sqrt(abslum/1.1);
-			this.HabZoneMax = Math.sqrt(abslum/0.53);			
+			this.HabZoneMax = Math.sqrt(abslum/0.53);
+
 		}
+	}
+	setPlanets(planetname,pl_orbsmax,pl_radius,pl_mass) {
+		let object = [];
+		if (pl_orbsmax<=this.HabZoneMax && pl_orbsmax>=this.HabZoneMin){
+			if (pl_radius<=2.50){
+				object = [planetname,pl_orbsmax,pl_radius,pl_mass,true];
+			} else if ((pl_mass<=10) && !(pl_radius >2.50) ){
+				object = [planetname,pl_orbsmax,pl_radius,pl_mass,true];
+			} 
+		} else {
+			object = [planetname,pl_orbsmax,pl_radius,pl_mass,false]
+		}
+		this.planets.push(object);
 	}
 	// Getter
 	getName() {
@@ -131,75 +142,7 @@ class star {
 	getHabZoneMax() {
 		return this.HabZoneMax;
 	}
-	insertPlNames(planet) {
-		this.planets.push(planet);
-	}
-	getPlNames() {
+	getPlanets() {
 		return this.planets;
-	}
-}
-
-
-class planet {
-
-	constructor(name, ra, dec, pl_orbsmax, pl_hostname, hosthabmax, hosthabmin) {
-
-		this.setName(name);
-		this.setRA(ra);
-		this.setDec(dec);
-		this.setPlDist(pl_orbsmax);
-		this.setHostName(pl_hostname);
-		this.setHostHabMax(hosthabmax);
-		this.setHostHabMin(hosthabmin);
-	}
-
-	// Setter
-	setName(name) {
-		this.name = name;
-	}
-	setRA(ra) {
-		this.ra = ra;
-	}
-	setDec(dec) {
-		this.dec = dec;
-	}
-	setPlDist(pl_orbsmax) {
-		if (pl_orbsmax>0) {
-			this.PlDist = pl_orbsmax;
-		} else {
-			this.PlDist = null;
-		}
-
-	}
-	setHostName(pl_hostname) {
-		this.host = pl_hostname;
-	}
-	setHostHabMax(hosthabmax) {
-		this.hosthabmax = hosthabmax;
-	}
-	setHostHabMin(hosthabmin) {
-		this.hosthabmin = hosthabmin;
-	}
-	// Getter
-	getName() {
-		return this.name;
-	}
-	getRA() {
-		return this.ra;
-	}
-	getDec() {
-		return this.dec;
-	}
-	getPlDist() {
-		return this.PlDist;
-	}
-	getHost() {
-		return this.host;
-	}
-	getHostHabMax() {
-		return this.hosthabmax;
-	}
-	getHostHabMin() {
-		return this.hosthabmin;
 	}
 }
