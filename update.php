@@ -25,7 +25,7 @@ fclose($dataFile);
 <body>
     <div id="content"> 
         <h2>Data updated succesfully</h1>
-        <form action="/index.html" method="get">
+        <form action="ism.html" method="get">
             <input type="submit" value="Return to Map">
         </form> 
     </div>

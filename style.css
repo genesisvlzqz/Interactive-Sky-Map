@@ -77,3 +77,10 @@ input.textbox, textarea { width: 100%; }
 input.button {font: 120% arial, verdana, sans-serif; margin-top: 10px;}
 textarea {display:block; height: 100px;}
 
+.inline-field input,
+.inline-field label {
+  display: inline-block;
+  margin-bottom: 0; /* I added this after I posted my reply */
+  vertical-align: middle; /* Fixes any weird issues in Firefox and IE */
+}
+
